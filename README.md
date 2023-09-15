@@ -30,8 +30,6 @@ by corpon
     -   Firefox и все браузеры на основе chromium 
 -   Games launcher
     -   Steam
-    -   Epic Games
-    -   Roblox
     -   Maincraft
 
 <h1>Download</h1>
