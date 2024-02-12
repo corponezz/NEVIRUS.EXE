@@ -6,3 +6,4 @@ psutil
 pycryptodome
 pyinstaller
 screeninfo
+pillow
