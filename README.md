@@ -29,6 +29,7 @@ by corpon
     -   Credit Cards
     -   Firefox и все браузеры на основе chromium 
 -   Games launcher
+    -   Epic Games
     -   Steam
     -   Maincraft
 
